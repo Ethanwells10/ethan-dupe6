@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h1 class="mb-2"><i class="fas fa-trophy me-2"></i>Top 10 Coins by Volume</h1>
+            <p class="text-muted mb-0">Top cryptocurrencies ranked by 24-hour trading volume</p>
+        </div>
+        <a href="{{ url_for('crypto.crypto_tracker') }}" class="btn btn-primary d-none d-md-block">
+            <i class="fas fa-search me-2"></i>Search Coins
+        </a>
+    </div>
+
+    {% if coins %}
+    <div class="row row-cols-1 row-cols-md-2 g-4 mt-2">
+        {% for coin in coins %}
+        <div class="col">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="me-3">
+                            {% if coin.image %}
+                            <img src="{{ coin.image }}" alt="{{ coin.name }}" width="48" height="48">
+                            {% else %}
+                            <i class="fas fa-coins fa-3x text-muted"></i>
+                            {% endif %}
+                        </div>
+                        <div class="flex-grow-1">
+                            <h5 class="card-title mb-1">
+                                #{{ loop.index }} {{ coin.name }}
+                                <span class="badge bg-secondary">{{ coin.symbol }}</span>
+                            </h5>
+                            <small class="text-muted">Market Cap Rank: {{ coin.rank or 'N/A' }}</small>
+                        </div>
+                    </div>
+
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <div class="p-3 bg-light rounded">
+                                <small class="text-muted d-block mb-1">Price</small>
+                                <strong class="text-ink">${{ "{:,.2f}".format(coin.price) }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 bg-light rounded">
+                                <small class="text-muted d-block mb-1">24h Change</small>
+                                <strong class="{% if coin.price_change_24h > 0 %}text-success{% else %}text-danger{% endif %}">
+                                    {{ "{:+.2f}".format(coin.price_change_24h) }}%
+                                </strong>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="p-3 bg-primary bg-opacity-10 rounded">
+                                <small class="text-muted d-block mb-1">24h Volume</small>
+                                <strong style="color: var(--brand);">${{ "{:,.0f}".format(coin.volume_24h) }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="p-3 bg-light rounded">
+                                <small class="text-muted d-block mb-1">Market Cap</small>
+                                <strong class="text-ink">${{ "{:,.0f}".format(coin.market_cap) }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="card text-center py-5">
+        <div class="card-body">
+            <i class="fas fa-exclamation-circle fa-4x text-muted mb-3"></i>
+            <h3>No Data Available</h3>
+            <p class="text-muted">Unable to load top coins. Please try again later.</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

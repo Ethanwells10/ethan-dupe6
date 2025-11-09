@@ -1,62 +1,138 @@
-# Flask Starter Kit
+# Cryptocurrency Tracker
 
-This is a Flask starter kit with basic structure and tooling for web application development.
+Flask web application that fetches live cryptocurrency data from the CoinGecko API and allows users to maintain a personal watchlist with full CRUD operations. Features a professional Coinbase-inspired UI with dark theme support, dual navigation (desktop/mobile), and global market metrics.
+
+## API Chosen & Why
+
+**CoinGecko API** - Free tier with generous rate limits, simple JSON responses, broad cryptocurrency coverage (13,000+ coins), and no authentication required for basic endpoints. Provides comprehensive data including price, market cap, 24h changes, and global market statistics.
+
+## What the Crypto Blueprint Does
+
+1. **Fetch** - Form accepts `coin_id` (e.g., bitcoin, ethereum) → calls CoinGecko `/coins/{id}` endpoint → fetches price, market cap, symbol, image
+2. **Display** - Shows fetched data with 24h price change percentage
+3. **Save** - User can save coin to MySQL `watchlist` table with optional note
+4. **Read** - View all saved coins, or view individual coin details with live vs. saved price comparison
+5. **Update** - Edit notes on saved coins, refresh individual coin prices
+6. **Delete** - Remove coins from watchlist
+
+Additional features: Top 10 coins by volume, global market metrics on home page.
+
+## Setup Instructions
+
+### Dependencies
+
+Install required packages:
+
+```bash
+pip install -r requirements.txt
+```
+
+Key dependencies: `Flask`, `requests`, `python-dotenv`, `PyMySQL`
+
+### Environment Variables
+
+Create a `.env` file with the following keys:
+
+```bash
+# JawsDB MySQL Connection
+DB_HOST=your_jawsdb_host.rds.amazonaws.com
+DB_USER=your_username
+DB_PASSWORD=your_password
+DB_PORT=3306
+DB_NAME=your_database_name
+
+# Optional: Alternative database URL format
+# DATABASE_URL=mysql://user:pass@host:3306/dbname
+# JAWSDB_URL=mysql://user:pass@host:3306/dbname
+
+# CoinGecko API (optional - use for higher rate limits)
+COINGECKO_API_KEY=your_api_key_here
+
+# Default vs_currency for price queries
+DEFAULT_VS=usd
+```
+
+**CoinGecko API Key**: Optional for free tier usage. If provided, it will be included in request headers. Get one at [CoinGecko API](https://www.coingecko.com/en/api).
+
+### Database Setup
+
+Create the `watchlist` table:
+
+```sql
+CREATE TABLE watchlist (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    coin_id VARCHAR(64) NOT NULL,
+    name VARCHAR(128),
+    symbol VARCHAR(32),
+    price DECIMAL(18, 6),
+    market_cap BIGINT,
+    note VARCHAR(255) DEFAULT '',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+Or run the setup script:
+
+```bash
+python database/setup_crypto_db.py
+```
+
+## How to Run
+
+### Development Server
+
+```bash
+python app.py
+```
+
+Or using Flask CLI:
+
+```bash
+flask run
+```
+
+The application will start on `http://127.0.0.1:5000`
+
+**Note**: If port 5000 is in use (macOS AirPlay Receiver), kill the process:
+
+```bash
+lsof -ti:5000 | xargs kill -9
+```
 
 ## Project Structure
-As your project grows, consider adding these organizational folders:
 
-### Recommended Additions
-- `docs/` - API documentation, setup guides, deployment notes
-- `docs/features/` - Feature specifications and requirements  
-- `docs/architecture/` - System design documents
-- `tests/` - Unit and integration tests
-- `migrations/` - Database schema changes (if using Flask-Migrate)
-- `config/` - Environment-specific configurations
-- `.github/workflows/` - CI/CD pipelines (if using GitHub)
-- `.vscode/` - Cursor/VS Code workspace settings
-
-### Documentation Files
-- `CHANGELOG.md` - Track version changes and updates
-- `.env.example` - Template for environment variables
-
-**Note**: Only create these folders as your project actually needs them. Don't over-structure early.
-
-## AI Workflow Integration
-This folder includes prompts that should be copy/pasted into your docs/commands folder and then used by tagging them in the chat (e.g. @plan_feature.md) and providing additional context such as the description of your feature.
-
-Feel free to customize them to your needs! These are really just a starting point and what works for me.
-
-[![The Perfect Cursor AI Workflow (3 Simple Steps)](https://img.youtube.com/vi/Jem2yqhXFaU/0.jpg)](https://youtu.be/Jem2yqhXFaU)
-> 🎥 The Perfect Cursor AI Workflow (3 Simple Steps)
-
-# Example Use
-## Create Brief
-Used for establishing the bigger picture context of what this project is about which can be helpful to plan new features.
 ```
-@create_brief.md 
+app/
+├── blueprints/
+│   └── crypto.py          # Crypto routes & CRUD operations
+├── services/
+│   └── coingecko_service.py  # API calls with 120s caching
+├── static/css/
+│   └── app.css            # Coinbase-inspired theme with dark mode
+├── templates/
+│   ├── base.html          # Base template with dual navigation
+│   ├── index.html         # Home page with market metrics
+│   ├── crypto.html        # Main tracker & fetch form
+│   ├── watchlist.html     # Saved coins table
+│   ├── view_coin.html     # Individual coin details
+│   └── top_coins.html     # Top 10 by volume
+├── db_connect.py          # MySQL connection helper
+└── routes.py              # Main app routes
 
-We are building an application to help dungeon masters plan their D&D campaigns and it's going to be called Dragonroll. It will include a variety of different tools, such as a random map generator and bc generator, loot generator and so on. We will use ai and allow the dungeon master to input certain prompts or use the tools directly.
+database/
+└── setup_crypto_db.py     # Table creation script
 ```
 
-## Plan Feature
-Used to create a technical plan for a new feature. Focuses on the technical requirements - NOT product manager context bloat or overly specific code details.
-```
-@plan_feature.md 
+## Features
 
-We want to add a new page that is going to be our NPC generator. To implement this, we are going to use the open ai api to generate the description of the npc as well as a name And we'll also generate an image for the npc using the open ai gpt-image-1 model.
-```
+- **Live Price Tracking** - Real-time cryptocurrency data from CoinGecko
+- **Watchlist Management** - Save, edit notes, refresh prices, delete coins
+- **Global Market Metrics** - Total market cap, 24h volume, BTC/ETH dominance
+- **Top 10 Coins** - View highest volume cryptocurrencies
+- **Dark Theme** - Auto-detects system preference or manual toggle
+- **Mobile Responsive** - Bottom tab navigation for mobile devices
+- **Caching** - 120-second TTL cache to reduce API calls
 
-## Code Review
-Used to review the successful completion of a plan in a separate chat (and yes, it's this minimal)
-```
-@code_review.md
-@0001_PLAN.md
-```
+---
 
-## Documentation Writing
-Used to create comprehensive documentation for the plan, review, and implementation.
-```
-@write_docs.md
-@0001_PLAN.md
-@0001_REVIEW.md
-```
+© 2025 Ethan | Built with Flask & CoinGecko

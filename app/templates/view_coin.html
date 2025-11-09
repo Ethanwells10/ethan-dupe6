@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h1 class="mb-2">
+                <i class="fas fa-chart-line me-2"></i>
+                {{ saved_coin.name }}
+                <span class="badge bg-secondary">{{ saved_coin.symbol }}</span>
+            </h1>
+            <p class="text-muted mb-0">Detailed coin information</p>
+        </div>
+        <a href="{{ url_for('crypto.watchlist_page') }}" class="btn btn-secondary d-none d-md-block">
+            <i class="fas fa-arrow-left me-2"></i>Back to Watchlist
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <!-- Saved Data Card -->
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-save me-2"></i>Saved Data</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <small class="text-muted d-block mb-1">Saved Price</small>
+                        <h3 class="mb-0">${{ "{:,.6f}".format(saved_coin.price) }}</h3>
+                    </div>
+
+                    <div class="mb-4">
+                        <small class="text-muted d-block mb-1">Market Cap</small>
+                        <strong class="text-ink">${{ "{:,.0f}".format(saved_coin.market_cap) }}</strong>
+                    </div>
+
+                    <div class="mb-4">
+                        <small class="text-muted d-block mb-1">Your Note</small>
+                        {% if saved_coin.note %}
+                            <p class="mb-0">{{ saved_coin.note }}</p>
+                        {% else %}
+                            <p class="text-muted fst-italic mb-0">No note added</p>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <small class="text-muted d-block mb-1">Added to Watchlist</small>
+                        <strong>{{ saved_coin.created_at.strftime('%B %d, %Y at %I:%M %p') if saved_coin.created_at else 'Unknown' }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Data Card -->
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-wifi me-2"></i>Live Data</h5>
+                </div>
+                <div class="card-body">
+                    {% if live_data %}
+                        <div class="mb-4">
+                            <small class="text-muted d-block mb-1">Current Price</small>
+                            <h3 class="mb-0">${{ "{:,.6f}".format(live_data.price) }}</h3>
+
+                            <!-- Price Change Since Saved -->
+                            {% if live_data.price != saved_coin.price %}
+                                {% set saved_price = saved_coin.price|float %}
+                                {% set price_diff = ((live_data.price - saved_price) / saved_price * 100) %}
+                                <small class="{% if price_diff > 0 %}text-success{% else %}text-danger{% endif %}">
+                                    {{ "{:+.2f}".format(price_diff) }}% since saved
+                                </small>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            <small class="text-muted d-block mb-1">Market Cap</small>
+                            <strong class="text-ink">${{ "{:,.0f}".format(live_data.market_cap) }}</strong>
+                        </div>
+
+                        <div class="mb-4">
+                            <small class="text-muted d-block mb-1">24h Price Change</small>
+                            <strong class="{% if live_data.get('price_change_24h', 0) > 0 %}text-success{% else %}text-danger{% endif %}">
+                                {{ "{:+.2f}".format(live_data.get('price_change_24h', 0)) }}%
+                            </strong>
+                        </div>
+
+                        {% if live_data.get('image') %}
+                        <div>
+                            <img src="{{ live_data.image }}" alt="{{ saved_coin.name }}" width="48" height="48">
+                        </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-exclamation-triangle fa-3x text-muted mb-3"></i>
+                            <p class="text-muted mb-0">Live data unavailable. Showing saved data only.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions Card -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-cog me-2"></i>Actions</h5>
+        </div>
+        <div class="card-body">
+            <div class="d-flex gap-2 flex-wrap">
+                <button type="button" class="btn btn-warning"
+                        onclick="openEditModal({{ saved_coin.id }}, '{{ saved_coin.name }}', '{{ saved_coin.note|replace("'", "\\'") }}')">
+                    <i class="fas fa-edit me-2"></i>Edit Note
+                </button>
+
+                <button type="button" class="btn btn-danger"
+                        onclick="openDeleteModal({{ saved_coin.id }}, '{{ saved_coin.name }}', '{{ saved_coin.symbol }}', '{{ saved_coin.note|replace("'", "\\'") }}')">
+                    <i class="fas fa-trash me-2"></i>Remove from Watchlist
+                </button>
+
+                {% if live_data %}
+                <a href="{{ url_for('crypto.crypto_tracker') }}" class="btn btn-primary">
+                    <i class="fas fa-sync-alt me-2"></i>Fetch Fresh Data
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalTitle">
+                    <i class="fas fa-edit me-2"></i>Edit Note
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" id="editForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="editNote" class="form-label">Note</label>
+                        <input type="text" class="form-control" name="note" id="editNote" maxlength="255"
+                               placeholder="Add a note about this coin...">
+                        <small class="text-muted">Maximum 255 characters</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-save me-2"></i>Update Note
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalTitle">
+                    <i class="fas fa-trash me-2"></i>Remove Coin
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="deleteModalBody"></p>
+                <p class="text-muted small mb-0" id="deleteModalNote"></p>
+            </div>
+            <div class="modal-footer">
+                <form method="post" id="deleteForm">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Remove
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function openEditModal(coinId, coinName, currentNote) {
+    document.getElementById('editModalTitle').innerHTML = '<i class="fas fa-edit me-2"></i>Edit Note for ' + coinName;
+    document.getElementById('editNote').value = currentNote || '';
+    document.getElementById('editForm').action = '/crypto/update/' + coinId;
+
+    var modal = new bootstrap.Modal(document.getElementById('editModal'));
+    modal.show();
+}
+
+function openDeleteModal(coinId, coinName, coinSymbol, coinNote) {
+    document.getElementById('deleteModalTitle').innerHTML = '<i class="fas fa-trash me-2"></i>Remove ' + coinName;
+    document.getElementById('deleteModalBody').innerHTML = 'Are you sure you want to remove <strong>' + coinName + ' (' + coinSymbol + ')</strong> from your watchlist?';
+
+    var noteElement = document.getElementById('deleteModalNote');
+    if (coinNote) {
+        noteElement.innerHTML = '<i class="fas fa-sticky-note me-1"></i>Your note: "' + coinNote + '"';
+        noteElement.style.display = 'block';
+    } else {
+        noteElement.style.display = 'none';
+    }
+
+    document.getElementById('deleteForm').action = '/crypto/delete/' + coinId;
+
+    var modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+</script>
+{% endblock %}

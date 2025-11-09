@@ -2,71 +2,212 @@
 
 {% block content %}
 
-<div class="text-center">
-    <div class="card shadow-lg p-5 mb-5">
-        <h1 class="display-4 mb-3">
-            <i class="fas fa-graduation-cap me-3"></i>Georgia College & State University
+<div class="home-hero text-center mt-5">
+    <div class="hero-content">
+        <div class="crypto-icon-wrapper mb-4">
+            <i class="fas fa-bitcoin crypto-icon"></i>
+        </div>
+        <h1 class="display-3 mb-3 fw-bold">
+            Cryptocurrency Tracker
         </h1>
-        <h2 class="h3 text-muted mb-4">MIS Flask Starter Kit</h2>
-        
-        <p class="lead mb-4">Welcome to GCSU's Flask development environment! This starter kit provides a foundation for building web applications using Python and Flask.</p>
-        
-        <div class="row justify-content-center mb-4">
-            <div class="col-md-10">
-                <p class="mb-0">Georgia College & State University, located in Milledgeville, Georgia, is a public liberal arts university known for its commitment to undergraduate education and student success. Our MIS program prepares students with practical skills in software development, data analysis, and modern web technologies for business applications.</p>
-            </div>
-        </div>
-        
-        <div class="row justify-content-center">
-            <div class="col-md-6 mb-3">
-                <div class="card h-100">
-                    <div class="card-body text-center">
-                        <i class="fas fa-code fa-3x mb-3" style="color: var(--gcsu-blue);"></i>
-                        <h5 class="card-title">Modern Development</h5>
-                        <p class="card-text">Built with Flask, Bootstrap, and modern web technologies for responsive design.</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6 mb-3">
-                <div class="card h-100">
-                    <div class="card-body text-center">
-                        <i class="fas fa-database fa-3x mb-3" style="color: var(--gcsu-green);"></i>
-                        <h5 class="card-title">Database Ready</h5>
-                        <p class="card-text">Pre-configured for MySQL/PostgreSQL with example CRUD operations.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
+        <p class="lead mb-4" style="max-width: 600px; margin: 0 auto;">
+            Track live cryptocurrency prices using the CoinGecko API. Search for your favorite coins, view market data, and save them to your personal watchlist.
+        </p>
         <div class="mt-4">
-            <a href="{{ url_for('examples.show_examples') }}" class="btn btn-primary btn-lg me-3">
-                <i class="fas fa-eye me-2"></i>View Examples
-            </a>
-            <a href="{{ url_for('about') }}" class="btn btn-outline-secondary btn-lg">
-                <i class="fas fa-info-circle me-2"></i>Learn More
+            <a href="{{ url_for('crypto.crypto_tracker') }}" class="btn btn-primary btn-lg px-5 py-3">
+                <i class="fas fa-search me-2"></i>Start Tracking Crypto
             </a>
         </div>
     </div>
 </div>
 
-<style>
-    .card {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
+<!-- Global Market Metrics -->
+{% if global_data %}
+<div class="container mt-5 mb-4">
+    <div class="text-center mb-4">
+        <div class="d-flex justify-content-center align-items-center gap-3 mb-2">
+            <h2 class="h4 fw-semibold mb-0">Global Market Overview</h2>
+            <a href="{{ url_for('refresh_global_data') }}" class="btn btn-sm btn-primary" title="Refresh market data">
+                <i class="fas fa-sync-alt"></i>
+            </a>
+        </div>
+        <p class="text-muted">Real-time cryptocurrency market statistics</p>
+    </div>
+
+    <div class="row g-3">
+        <!-- Total Market Cap -->
+        <div class="col-md-4 col-sm-6">
+            <div class="card metric-card">
+                <div class="card-body text-center">
+                    <div class="metric-icon mb-2">
+                        <i class="fas fa-globe"></i>
+                    </div>
+                    <small class="text-muted d-block mb-1">Total Market Cap</small>
+                    <h4 class="mb-1">${{ "{:,.0f}".format(global_data.total_market_cap / 1000000000) }}B</h4>
+                    <small class="{% if global_data.market_cap_change_24h > 0 %}text-success{% else %}text-danger{% endif %}">
+                        {{ "{:+.2f}".format(global_data.market_cap_change_24h) }}% (24h)
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- 24h Volume -->
+        <div class="col-md-4 col-sm-6">
+            <div class="card metric-card">
+                <div class="card-body text-center">
+                    <div class="metric-icon mb-2">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <small class="text-muted d-block mb-1">24h Trading Volume</small>
+                    <h4 class="mb-0">${{ "{:,.0f}".format(global_data.total_volume_24h / 1000000000) }}B</h4>
+                </div>
+            </div>
+        </div>
+
+        <!-- BTC Dominance -->
+        <div class="col-md-4 col-sm-6">
+            <div class="card metric-card">
+                <div class="card-body text-center">
+                    <div class="metric-icon mb-2">
+                        <i class="fab fa-bitcoin"></i>
+                    </div>
+                    <small class="text-muted d-block mb-1">BTC Dominance</small>
+                    <h4 class="mb-0">{{ "{:.1f}".format(global_data.btc_dominance) }}%</h4>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Cryptocurrencies -->
+        <div class="col-md-4 col-sm-6">
+            <div class="card metric-card">
+                <div class="card-body text-center">
+                    <div class="metric-icon mb-2">
+                        <i class="fas fa-coins"></i>
+                    </div>
+                    <small class="text-muted d-block mb-1">Active Cryptocurrencies</small>
+                    <h4 class="mb-0">{{ "{:,}".format(global_data.active_cryptocurrencies) }}</h4>
+                </div>
+            </div>
+        </div>
+
+        <!-- Markets -->
+        <div class="col-md-4 col-sm-6">
+            <div class="card metric-card">
+                <div class="card-body text-center">
+                    <div class="metric-icon mb-2">
+                        <i class="fas fa-store"></i>
+                    </div>
+                    <small class="text-muted d-block mb-1">Active Markets</small>
+                    <h4 class="mb-0">{{ "{:,}".format(global_data.markets) }}</h4>
+                </div>
+            </div>
+        </div>
+
+        <!-- ETH Dominance -->
+        <div class="col-md-4 col-sm-6">
+            <div class="card metric-card">
+                <div class="card-body text-center">
+                    <div class="metric-icon mb-2">
+                        <i class="fab fa-ethereum"></i>
+                    </div>
+                    <small class="text-muted d-block mb-1">ETH Dominance</small>
+                    <h4 class="mb-0">{{ "{:.1f}".format(global_data.eth_dominance) }}%</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Quick Links Section -->
+<div class="container mt-5 mb-5">
+    <div class="text-center mb-4">
+        <h2 class="h4 fw-semibold mb-2">Quick Links</h2>
+        <p class="text-muted">Explore all the features available</p>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-4">
+            <a href="{{ url_for('crypto.crypto_tracker') }}" class="quicklink-card">
+                <div class="card h-100 border-0">
+                    <div class="card-body text-center p-4">
+                        <div class="quicklink-icon mb-3">
+                            <i class="fas fa-bitcoin"></i>
+                        </div>
+                        <h5 class="card-title mb-2">Crypto Tracker</h5>
+                        <p class="text-muted small mb-0">
+                            Search and fetch live cryptocurrency data
+                        </p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-4">
+            <a href="{{ url_for('crypto.watchlist_page') }}" class="quicklink-card">
+                <div class="card h-100 border-0">
+                    <div class="card-body text-center p-4">
+                        <div class="quicklink-icon mb-3">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <h5 class="card-title mb-2">My Watchlist</h5>
+                        <p class="text-muted small mb-0">
+                            View and manage your saved cryptocurrencies
+                        </p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-4">
+            <a href="{{ url_for('crypto.top_coins') }}" class="quicklink-card">
+                <div class="card h-100 border-0">
+                    <div class="card-body text-center p-4">
+                        <div class="quicklink-icon mb-3">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                        <h5 class="card-title mb-2">Top 10 Coins</h5>
+                        <p class="text-muted small mb-0">
+                            Discover the top cryptocurrencies by volume
+                        </p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="container mt-5 mb-5">
+    <div class="row align-items-center">
+        <div class="col-md-6 mb-4 mb-md-0">
+            <h3 class="h4 fw-semibold mb-3">Real-Time Data</h3>
+            <p class="text-muted">
+                Get up-to-date cryptocurrency prices, market caps, and 24-hour changes powered by the CoinGecko API.
+            </p>
+        </div>
+        <div class="col-md-6 mb-4 mb-md-0">
+            <h3 class="h4 fw-semibold mb-3">Personalized Watchlist</h3>
+            <p class="text-muted">
+                Save your favorite coins with custom notes and track them all in one convenient location.
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+// Add spinning animation to refresh button
+document.addEventListener('DOMContentLoaded', function() {
+    const refreshBtn = document.querySelector('a[href*="refresh-global-data"]');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', function(e) {
+            const icon = this.querySelector('i');
+            if (icon) {
+                icon.style.animation = 'spin 1s linear infinite';
+            }
+        });
     }
-    
-    .btn-outline-secondary {
-        border-color: var(--gcsu-blue);
-        color: var(--gcsu-blue);
-    }
-    
-    .btn-outline-secondary:hover {
-        background-color: var(--gcsu-blue);
-        border-color: var(--gcsu-blue);
-        color: white;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 51, 153, 0.3);
-    }
-</style>
+});
+</script>
 
 {% endblock %}

@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-2"><i class="fas fa-bitcoin me-2"></i>Cryptocurrency Tracker</h1>
+    <p class="text-muted mb-4">Search for cryptocurrency data and manage your watchlist</p>
+
+    <!-- Fetch Coin Data Form -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-search me-2"></i>Fetch Coin Data</h5>
+        </div>
+        <div class="card-body">
+            <form method="post" action="{{ url_for('crypto.crypto_tracker') }}">
+                <div class="row">
+                    <div class="col-md-8">
+                        <label for="coin_id" class="form-label">CoinGecko Coin ID</label>
+                        <input type="text" class="form-control" name="coin_id" id="coin_id"
+                               placeholder="e.g., bitcoin, ethereum, cardano, solana" required>
+                        <small class="text-muted">Enter the CoinGecko coin ID (usually lowercase coin name)</small>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button type="submit" name="fetch_coin" class="btn btn-primary w-100">
+                            <i class="fas fa-download me-2"></i>Fetch Data
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Display Fetched Coin Data -->
+    {% if coin_data %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Fetched Coin Data</h5>
+        </div>
+        <div class="card-body">
+            <div class="row align-items-center mb-3">
+                <div class="col-auto">
+                    {% if coin_data.image %}
+                    <img src="{{ coin_data.image }}" alt="{{ coin_data.name }}" width="50">
+                    {% endif %}
+                </div>
+                <div class="col">
+                    <h3 class="mb-0">{{ coin_data.name }} ({{ coin_data.symbol }})</h3>
+                </div>
+            </div>
+
+            <table class="table table-sm mb-0">
+                <tbody>
+                    <tr>
+                        <th width="30%">Price (USD)</th>
+                        <td class="text-end fw-bold">${{ "{:,.6f}".format(coin_data.price) }}</td>
+                    </tr>
+                    <tr>
+                        <th>Market Cap (USD)</th>
+                        <td class="text-end">${{ "{:,.0f}".format(coin_data.market_cap) }}</td>
+                    </tr>
+                    <tr>
+                        <th>24h Price Change</th>
+                        <td class="text-end">
+                            <span class="fw-bold {% if coin_data.price_change_24h > 0 %}text-success{% else %}text-danger{% endif %}">
+                                {{ "{:+.2f}".format(coin_data.price_change_24h) }}%
+                            </span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Save to Watchlist Form -->
+            <form method="post" action="{{ url_for('crypto.crypto_tracker') }}">
+                <input type="hidden" name="coin_id" value="{{ coin_data.id }}">
+                <input type="hidden" name="name" value="{{ coin_data.name }}">
+                <input type="hidden" name="symbol" value="{{ coin_data.symbol }}">
+                <input type="hidden" name="price" value="{{ coin_data.price }}">
+                <input type="hidden" name="market_cap" value="{{ coin_data.market_cap }}">
+
+                <div class="mb-3">
+                    <label for="note" class="form-label">Note (optional)</label>
+                    <input type="text" class="form-control" name="note" id="note" maxlength="255"
+                              placeholder="Add a note about this coin...">
+                </div>
+
+                <button type="submit" name="save_coin" class="btn btn-success">
+                    <i class="fas fa-save me-2"></i>Save to Watchlist
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Watchlist Table -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-list me-2"></i>My Watchlist</h5>
+        </div>
+        <div class="card-body">
+            {% if watchlist %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Coin</th>
+                            <th>Symbol</th>
+                            <th class="text-end">Price (USD)</th>
+                            <th class="text-end">Market Cap</th>
+                            <th>Note</th>
+                            <th>Added</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for coin in watchlist %}
+                        <tr>
+                            <td><strong>{{ coin.name }}</strong></td>
+                            <td><span class="badge bg-secondary">{{ coin.symbol }}</span></td>
+                            <td class="text-end fw-bold">${{ "{:,.2f}".format(coin.price) }}</td>
+                            <td class="text-end">${{ "{:,.0f}".format(coin.market_cap) }}</td>
+                            <td><small class="text-muted">{{ coin.note or '-' }}</small></td>
+                            <td><small>{{ coin.created_at.strftime('%b %d') if coin.created_at else '-' }}</small></td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('crypto.view_coin', id=coin.id) }}"
+                                       class="btn btn-primary"
+                                       title="View details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('crypto.refresh_coin', id=coin.id) }}"
+                                       class="btn btn-info refresh-coin-btn"
+                                       title="Refresh price data">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-warning"
+                                            onclick="openEditModal({{ coin.id }}, '{{ coin.name }}', '{{ coin.note|replace("'", "\\'") }}')">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-danger"
+                                            onclick="openDeleteModal({{ coin.id }}, '{{ coin.name }}')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted text-center mb-0">
+                <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
+                Your watchlist is empty. Fetch coin data above and save to your watchlist!
+            </p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Single Edit Modal (Reusable) -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalTitle">Edit Note</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" id="editForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="editNote" class="form-label">Note</label>
+                        <input type="text" class="form-control" name="note" id="editNote" maxlength="255">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning">Update Note</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Single Delete Modal (Reusable) -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalTitle">Delete Coin</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="deleteModalBody">Are you sure you want to remove this coin?</p>
+            </div>
+            <div class="modal-footer">
+                <form method="post" id="deleteForm">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+function openEditModal(coinId, coinName, currentNote) {
+    document.getElementById('editModalTitle').textContent = 'Edit Note for ' + coinName;
+    document.getElementById('editNote').value = currentNote || '';
+    document.getElementById('editForm').action = '/crypto/update/' + coinId;
+
+    var modal = new bootstrap.Modal(document.getElementById('editModal'));
+    modal.show();
+}
+
+function openDeleteModal(coinId, coinName) {
+    document.getElementById('deleteModalTitle').textContent = 'Delete ' + coinName;
+    document.getElementById('deleteModalBody').textContent = 'Are you sure you want to remove ' + coinName + ' from your watchlist?';
+    document.getElementById('deleteForm').action = '/crypto/delete/' + coinId;
+
+    var modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+
+// Add spinning animation to refresh buttons
+document.addEventListener('DOMContentLoaded', function() {
+    const refreshBtns = document.querySelectorAll('.refresh-coin-btn');
+    refreshBtns.forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            this.classList.add('spinning');
+        });
+    });
+});
+</script>
+{% endblock %}
