@@ -2,14 +2,21 @@
 
 {% block content %}
 <div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <div>
-            <h1 class="mb-2"><i class="fas fa-star me-2"></i>My Crypto Watchlist</h1>
-            <p class="text-muted mb-0">Manage your saved cryptocurrencies</p>
+    <div class="mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <div>
+                <h1 class="mb-2"><i class="fas fa-star me-2"></i>My Crypto Watchlist</h1>
+            </div>
+            <a href="{{ url_for('crypto.crypto_tracker') }}" class="btn btn-primary d-md-none btn-sm">
+                <i class="fas fa-plus"></i>
+            </a>
         </div>
-        <a href="{{ url_for('crypto.crypto_tracker') }}" class="btn btn-primary d-none d-md-block">
-            <i class="fas fa-plus me-2"></i>Add New Coin
-        </a>
+        <div class="d-flex justify-content-between align-items-center">
+            <p class="text-muted mb-0">Manage your saved cryptocurrencies</p>
+            <a href="{{ url_for('crypto.crypto_tracker') }}" class="btn btn-primary d-none d-md-block">
+                <i class="fas fa-plus me-2"></i>Add New Coin
+            </a>
+        </div>
     </div>
 
     {% if watchlist %}
@@ -19,37 +26,40 @@
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table mb-0">
+                <table class="table table-sm mb-0">
                     <thead>
                         <tr>
                             <th>Coin</th>
-                            <th>Symbol</th>
+                            <th class="d-none d-md-table-cell">Symbol</th>
                             <th class="text-end">Price (USD)</th>
-                            <th class="text-end">Market Cap</th>
-                            <th>Note</th>
-                            <th>Added</th>
+                            <th class="text-end d-none d-lg-table-cell">Market Cap</th>
+                            <th class="d-none d-xl-table-cell">Note</th>
+                            <th class="d-none d-lg-table-cell">Added</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for coin in watchlist %}
                         <tr>
-                            <td><strong>{{ coin.name }}</strong></td>
                             <td>
+                                <strong>{{ coin.name }}</strong>
+                                <span class="badge bg-secondary d-md-none">{{ coin.symbol }}</span>
+                            </td>
+                            <td class="d-none d-md-table-cell">
                                 <span class="badge bg-secondary">{{ coin.symbol }}</span>
                             </td>
                             <td class="text-end fw-bold">
                                 ${{ "{:,.2f}".format(coin.price) }}
                             </td>
-                            <td class="text-end">${{ "{:,.0f}".format(coin.market_cap) }}</td>
-                            <td>
+                            <td class="text-end d-none d-lg-table-cell">${{ "{:,.0f}".format(coin.market_cap) }}</td>
+                            <td class="d-none d-xl-table-cell">
                                 {% if coin.note %}
-                                    <small class="text-muted">{{ coin.note }}</small>
+                                    <small class="text-muted text-truncate" style="max-width: 150px; display: inline-block;">{{ coin.note }}</small>
                                 {% else %}
                                     <small class="text-muted fst-italic">-</small>
                                 {% endif %}
                             </td>
-                            <td>
+                            <td class="d-none d-lg-table-cell">
                                 <small>{{ coin.created_at.strftime('%b %d') if coin.created_at else '-' }}</small>
                             </td>
                             <td>

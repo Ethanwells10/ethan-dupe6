@@ -12,14 +12,15 @@
         </div>
         <div class="card-body">
             <form method="post" action="{{ url_for('crypto.crypto_tracker') }}">
-                <div class="row">
-                    <div class="col-md-8">
+                <div class="row g-3">
+                    <div class="col-12 col-md-8">
                         <label for="coin_id" class="form-label">CoinGecko Coin ID</label>
                         <input type="text" class="form-control" name="coin_id" id="coin_id"
                                placeholder="e.g., bitcoin, ethereum, cardano, solana" required>
                         <small class="text-muted">Enter the CoinGecko coin ID (usually lowercase coin name)</small>
                     </div>
-                    <div class="col-md-4 d-flex align-items-end">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label d-none d-md-block">&nbsp;</label>
                         <button type="submit" name="fetch_coin" class="btn btn-primary w-100">
                             <i class="fas fa-download me-2"></i>Fetch Data
                         </button>
@@ -98,27 +99,30 @@
         <div class="card-body">
             {% if watchlist %}
             <div class="table-responsive">
-                <table class="table">
+                <table class="table table-sm">
                     <thead>
                         <tr>
                             <th>Coin</th>
-                            <th>Symbol</th>
+                            <th class="d-none d-md-table-cell">Symbol</th>
                             <th class="text-end">Price (USD)</th>
-                            <th class="text-end">Market Cap</th>
-                            <th>Note</th>
-                            <th>Added</th>
+                            <th class="text-end d-none d-lg-table-cell">Market Cap</th>
+                            <th class="d-none d-xl-table-cell">Note</th>
+                            <th class="d-none d-lg-table-cell">Added</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for coin in watchlist %}
                         <tr>
-                            <td><strong>{{ coin.name }}</strong></td>
-                            <td><span class="badge bg-secondary">{{ coin.symbol }}</span></td>
+                            <td>
+                                <strong>{{ coin.name }}</strong>
+                                <span class="badge bg-secondary d-md-none">{{ coin.symbol }}</span>
+                            </td>
+                            <td class="d-none d-md-table-cell"><span class="badge bg-secondary">{{ coin.symbol }}</span></td>
                             <td class="text-end fw-bold">${{ "{:,.2f}".format(coin.price) }}</td>
-                            <td class="text-end">${{ "{:,.0f}".format(coin.market_cap) }}</td>
-                            <td><small class="text-muted">{{ coin.note or '-' }}</small></td>
-                            <td><small>{{ coin.created_at.strftime('%b %d') if coin.created_at else '-' }}</small></td>
+                            <td class="text-end d-none d-lg-table-cell">${{ "{:,.0f}".format(coin.market_cap) }}</td>
+                            <td class="d-none d-xl-table-cell"><small class="text-muted text-truncate" style="max-width: 150px; display: inline-block;">{{ coin.note or '-' }}</small></td>
+                            <td class="d-none d-lg-table-cell"><small>{{ coin.created_at.strftime('%b %d') if coin.created_at else '-' }}</small></td>
                             <td>
                                 <div class="btn-group btn-group-sm">
                                     <a href="{{ url_for('crypto.view_coin', id=coin.id) }}"

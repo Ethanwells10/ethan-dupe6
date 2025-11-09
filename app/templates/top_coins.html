@@ -2,14 +2,21 @@
 
 {% block content %}
 <div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <div>
-            <h1 class="mb-2"><i class="fas fa-trophy me-2"></i>Top 10 Coins by Volume</h1>
-            <p class="text-muted mb-0">Top cryptocurrencies ranked by 24-hour trading volume</p>
+    <div class="mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <div>
+                <h1 class="mb-2"><i class="fas fa-trophy me-2"></i>Top 10 Coins by Volume</h1>
+            </div>
+            <a href="{{ url_for('crypto.crypto_tracker') }}" class="btn btn-primary d-md-none btn-sm">
+                <i class="fas fa-search"></i>
+            </a>
         </div>
-        <a href="{{ url_for('crypto.crypto_tracker') }}" class="btn btn-primary d-none d-md-block">
-            <i class="fas fa-search me-2"></i>Search Coins
-        </a>
+        <div class="d-flex justify-content-between align-items-center">
+            <p class="text-muted mb-0">Top cryptocurrencies ranked by 24-hour trading volume</p>
+            <a href="{{ url_for('crypto.crypto_tracker') }}" class="btn btn-primary d-none d-md-block">
+                <i class="fas fa-search me-2"></i>Search Coins
+            </a>
+        </div>
     </div>
 
     {% if coins %}

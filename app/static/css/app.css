@@ -395,8 +395,8 @@ a:hover {
   left: 0;
   right: 0;
   background: var(--surface);
-  border-top: 1px solid var(--border);
-  box-shadow: var(--shadow-card);
+  border-top: 2px solid var(--border);
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
   padding: 0.5rem 0;
   padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
   z-index: 1030;
@@ -465,6 +465,21 @@ a:hover {
   /* Stack cards on mobile */
   .row-cols-md-2 > * {
     width: 100%;
+  }
+
+  /* Ensure action buttons in cards are full-width on mobile */
+  .card-body .btn-group .btn {
+    flex: 1;
+  }
+
+  /* Better mobile card layout */
+  .col-md-6 {
+    margin-bottom: 1rem;
+  }
+
+  /* Improve readability of data cards on mobile */
+  .p-3 {
+    padding: 0.75rem !important;
   }
 }
 
@@ -1198,5 +1213,339 @@ html[data-theme="dark"] .alert-info {
     background: rgba(239, 68, 68, 0.15) !important;
     border-left-color: var(--down) !important;
     color: var(--down);
+  }
+}
+
+/* ========================================
+   Mobile Responsive Styles
+   ======================================== */
+
+/* Mobile: ≤576px (phones) */
+@media (max-width: 576px) {
+  /* Typography - smaller headings on mobile */
+  h1 {
+    font-size: 1.75rem !important;
+  }
+
+  h2 {
+    font-size: 1.5rem !important;
+  }
+
+  h3 {
+    font-size: 1.25rem !important;
+  }
+
+  h4, h5 {
+    font-size: 1.1rem !important;
+  }
+
+  /* Containers - tighter padding */
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  /* Cards - reduce padding */
+  .card {
+    margin-bottom: 1rem;
+  }
+
+  .card-body {
+    padding: 1rem !important;
+  }
+
+  .card-header {
+    padding: 0.75rem 1rem !important;
+  }
+
+  /* Buttons - full width, better tap targets */
+  .btn {
+    min-height: 44px;
+    padding: 0.625rem 1rem;
+  }
+
+  .btn-group-sm > .btn,
+  .btn-sm {
+    min-height: 44px;
+    padding: 0.5rem 0.75rem;
+  }
+
+  /* Links should also have good tap targets */
+  a.nav-link,
+  .navbar-nav .nav-link {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+
+  /* Bottom tab bar items */
+  .bottom-tab-bar .nav-link {
+    min-height: 48px;
+    min-width: 48px;
+  }
+
+  /* Forms - full width inputs */
+  .form-control,
+  .form-select {
+    min-height: 44px;
+    font-size: 16px; /* Prevents iOS zoom on focus */
+  }
+
+  /* Tables - smaller text, better spacing */
+  .table {
+    font-size: 0.875rem;
+  }
+
+  .table th,
+  .table td {
+    padding: 0.5rem 0.25rem;
+    white-space: nowrap;
+  }
+
+  .table .btn-group {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0.125rem;
+  }
+
+  .table .btn-group .btn {
+    min-height: 36px;
+    min-width: 36px;
+    padding: 0.375rem 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  /* Ensure table scrolls horizontally on mobile */
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 -1rem;
+    padding: 0 1rem;
+  }
+
+  /* Ensure table columns don't collapse too much */
+  .table th:first-child,
+  .table td:first-child {
+    position: sticky;
+    left: 0;
+    background: var(--surface);
+    z-index: 1;
+  }
+
+  html[data-theme="dark"] .table th:first-child,
+  html[data-theme="dark"] .table td:first-child {
+    background: var(--surface);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    html:not([data-theme="light"]) .table th:first-child,
+    html:not([data-theme="light"]) .table td:first-child {
+      background: var(--surface);
+    }
+  }
+
+  /* Badge - smaller on mobile */
+  .badge {
+    font-size: 0.7rem;
+    padding: 0.25em 0.5em;
+  }
+
+  /* Text truncation for coin names */
+  .table td strong,
+  .card-title {
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: inline-block;
+    vertical-align: middle;
+  }
+
+  /* Allow badges to wrap next to truncated text */
+  .table td .badge {
+    white-space: nowrap;
+  }
+
+  /* Metric cards - stack content */
+  .metric-card .card-body {
+    padding: 0.75rem !important;
+  }
+
+  .metric-card h4 {
+    font-size: 1.1rem !important;
+  }
+
+  /* Quick links - reduce icon size */
+  .quicklink-icon {
+    font-size: 2rem !important;
+  }
+
+  /* Hero - smaller on mobile */
+  .home-hero {
+    margin-top: 1rem !important;
+    padding: 1rem 0;
+  }
+
+  .crypto-icon {
+    font-size: 3rem !important;
+  }
+
+  .display-3 {
+    font-size: 2rem !important;
+  }
+
+  .lead {
+    font-size: 1rem !important;
+  }
+
+  /* Hide desktop-only buttons */
+  .d-md-block {
+    margin-top: 0.5rem;
+  }
+
+  /* Modals - full width on mobile */
+  .modal-dialog {
+    margin: 0.5rem;
+  }
+
+  /* Spacing utilities */
+  .mt-4, .my-4 {
+    margin-top: 1rem !important;
+  }
+
+  .mb-4, .my-4 {
+    margin-bottom: 1rem !important;
+  }
+
+  .mt-5, .my-5 {
+    margin-top: 1.5rem !important;
+  }
+
+  .mb-5, .my-5 {
+    margin-bottom: 1.5rem !important;
+  }
+
+  /* Reduce gaps between cards */
+  .g-4 {
+    gap: 0.75rem !important;
+  }
+
+  .g-3 {
+    gap: 0.5rem !important;
+  }
+
+  /* Tighter row spacing */
+  .row {
+    margin-left: -0.5rem;
+    margin-right: -0.5rem;
+  }
+
+  .row > * {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
+  /* Footer - tighter on mobile */
+  .footer-gcsu {
+    padding: 1rem 0;
+    margin-bottom: 70px; /* Space for bottom tab bar */
+    font-size: 0.875rem;
+  }
+
+  /* Navbar - ensure proper toggle styling */
+  .navbar-toggler {
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    padding: 0.5rem 0.75rem;
+    min-height: 44px;
+    min-width: 44px;
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .navbar-toggler:focus {
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.75);
+  }
+
+  .navbar-toggler-icon {
+    width: 1.5em;
+    height: 1.5em;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(255, 255, 255, 0.95)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+  }
+
+  /* Ensure navbar collapses properly */
+  .navbar-collapse {
+    background: var(--brand-700);
+    margin: 0 -1rem;
+    padding: 0.5rem 1rem;
+  }
+
+  .navbar-nav .nav-link {
+    padding: 0.75rem 1rem;
+  }
+}
+
+/* Tablet: 577px - 768px */
+@media (min-width: 577px) and (max-width: 768px) {
+  h1 {
+    font-size: 2rem;
+  }
+
+  .container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+
+  .card-body {
+    padding: 1.25rem;
+  }
+
+  .table {
+    font-size: 0.9rem;
+  }
+}
+
+/* Prevent horizontal scroll on all screens */
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+.container-fluid,
+.container {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Ensure all images are responsive */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Text truncation for long coin names */
+.text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Prevent long words from breaking layout */
+h1, h2, h3, h4, h5, h6, p, td, th {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Ensure focus states are visible */
+.btn:focus,
+.form-control:focus,
+.form-select:focus {
+  outline: 2px solid var(--brand-600);
+  outline-offset: 2px;
+}
+
+/* Better touch targets for mobile action buttons */
+@media (max-width: 768px) {
+  .btn-group .btn {
+    flex: 1 1 auto;
   }
 }
