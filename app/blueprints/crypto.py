@@ -103,6 +103,26 @@ def top_coins():
 
     return render_template('top_coins.html', coins=coins)
 
+@crypto.route('/top-gainers')
+def top_gainers():
+    coins, error = CoinGeckoService.fetch_top_gainers(limit=10)
+
+    if error:
+        flash(error, 'danger')
+        coins = []
+
+    return render_template('top_gainers.html', coins=coins)
+
+@crypto.route('/top-losers')
+def top_losers():
+    coins, error = CoinGeckoService.fetch_top_losers(limit=10)
+
+    if error:
+        flash(error, 'danger')
+        coins = []
+
+    return render_template('top_losers.html', coins=coins)
+
 @crypto.route('/view/<int:id>')
 def view_coin(id):
     db = get_db()

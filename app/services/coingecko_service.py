@@ -13,7 +13,7 @@ BASE_URL = "https://api.coingecko.com/api/v3"
 
 # In-memory cache with TTL
 _cache = {}
-CACHE_TTL = 120  # 120 seconds (2 minutes)
+CACHE_TTL = 300  # 300 seconds (5 minutes)
 
 
 class CoinGeckoService:
@@ -65,6 +65,15 @@ class CoinGeckoService:
         }
 
     @staticmethod
+    def _get_stale_cache(cache_key: str):
+        """
+        Retrieve data from cache even if expired (fallback for rate limiting)
+        """
+        if cache_key in _cache:
+            return _cache[cache_key]['data']
+        return None
+
+    @staticmethod
     def fetch_coin(coin_id: str) -> tuple[Optional[Dict], Optional[str]]:
         """
         Fetch cryptocurrency data from CoinGecko API
@@ -100,6 +109,13 @@ class CoinGeckoService:
             # Handle 404 - coin not found
             if response.status_code == 404:
                 return None, f'Coin "{coin_id}" not found. Try bitcoin, ethereum, cardano, etc.'
+
+            # Handle 429 - rate limited
+            if response.status_code == 429:
+                stale = CoinGeckoService._get_stale_cache(coin_id)
+                if stale:
+                    return stale, None
+                return None, 'Rate limited by CoinGecko API. Please wait a minute and try again.'
 
             # Handle other error status codes
             if response.status_code != 200:
@@ -181,7 +197,14 @@ class CoinGeckoService:
             # Make API request
             response = requests.get(url, params=params, headers=headers, timeout=10)
 
-            # Handle error status codes
+            # Handle 429 - rate limited
+            if response.status_code == 429:
+                stale = CoinGeckoService._get_stale_cache(cache_key)
+                if stale:
+                    return stale, None
+                return None, 'Rate limited by CoinGecko API. Please wait a minute and try again.'
+
+            # Handle other error status codes
             if response.status_code != 200:
                 return None, f'API error: Unable to fetch top coins (Status {response.status_code})'
 
@@ -225,6 +248,144 @@ class CoinGeckoService:
             return None, f'Unexpected error: {str(e)}'
 
     @staticmethod
+    def fetch_top_gainers(limit: int = 10) -> tuple[Optional[list], Optional[str]]:
+        """
+        Fetch top cryptocurrency gainers by 24h price change percentage.
+        Fetches top 250 coins by market cap, then sorts by price change descending.
+        """
+
+        cache_key = f'top_gainers_{limit}'
+        cached_data = CoinGeckoService._get_from_cache(cache_key)
+        if cached_data:
+            return cached_data, None
+
+        url = f"{BASE_URL}/coins/markets"
+        params = {
+            'vs_currency': 'usd',
+            'order': 'market_cap_desc',
+            'per_page': 250,
+            'page': 1,
+            'sparkline': 'false',
+            'locale': 'en'
+        }
+        headers = CoinGeckoService._get_headers()
+
+        try:
+            response = requests.get(url, params=params, headers=headers, timeout=10)
+
+            if response.status_code == 429:
+                stale = CoinGeckoService._get_stale_cache(cache_key)
+                if stale:
+                    return stale, None
+                return None, 'Rate limited by CoinGecko API. Please wait a minute and try again.'
+
+            if response.status_code != 200:
+                return None, f'API error: Unable to fetch top gainers (Status {response.status_code})'
+
+            data = response.json()
+
+            # Sort by 24h price change descending (biggest gainers first)
+            data.sort(key=lambda c: c.get('price_change_percentage_24h') or 0, reverse=True)
+
+            coins_list = []
+            for coin in data[:limit]:
+                coin_info = {
+                    'rank': coin.get('market_cap_rank', 0),
+                    'coin_id': coin.get('id'),
+                    'name': coin.get('name'),
+                    'symbol': coin.get('symbol', '').upper(),
+                    'price': coin.get('current_price', 0),
+                    'market_cap': coin.get('market_cap', 0),
+                    'volume_24h': coin.get('total_volume', 0),
+                    'price_change_24h': coin.get('price_change_percentage_24h', 0),
+                    'image': coin.get('image', '')
+                }
+                coins_list.append(coin_info)
+
+            CoinGeckoService._save_to_cache(cache_key, coins_list)
+            return coins_list, None
+
+        except requests.exceptions.Timeout:
+            return None, 'Request timed out. Please try again.'
+        except requests.exceptions.ConnectionError:
+            return None, 'Network error. Please check your internet connection.'
+        except requests.exceptions.RequestException as e:
+            return None, f'API request failed: {str(e)}'
+        except ValueError:
+            return None, 'Invalid response from API. Please try again.'
+        except Exception as e:
+            return None, f'Unexpected error: {str(e)}'
+
+    @staticmethod
+    def fetch_top_losers(limit: int = 10) -> tuple[Optional[list], Optional[str]]:
+        """
+        Fetch top cryptocurrency losers by 24h price change percentage.
+        Fetches top 250 coins by market cap, then sorts by price change ascending.
+        """
+
+        cache_key = f'top_losers_{limit}'
+        cached_data = CoinGeckoService._get_from_cache(cache_key)
+        if cached_data:
+            return cached_data, None
+
+        url = f"{BASE_URL}/coins/markets"
+        params = {
+            'vs_currency': 'usd',
+            'order': 'market_cap_desc',
+            'per_page': 250,
+            'page': 1,
+            'sparkline': 'false',
+            'locale': 'en'
+        }
+        headers = CoinGeckoService._get_headers()
+
+        try:
+            response = requests.get(url, params=params, headers=headers, timeout=10)
+
+            if response.status_code == 429:
+                stale = CoinGeckoService._get_stale_cache(cache_key)
+                if stale:
+                    return stale, None
+                return None, 'Rate limited by CoinGecko API. Please wait a minute and try again.'
+
+            if response.status_code != 200:
+                return None, f'API error: Unable to fetch top losers (Status {response.status_code})'
+
+            data = response.json()
+
+            # Sort by 24h price change ascending (biggest losers first)
+            data.sort(key=lambda c: c.get('price_change_percentage_24h') or 0)
+
+            coins_list = []
+            for coin in data[:limit]:
+                coin_info = {
+                    'rank': coin.get('market_cap_rank', 0),
+                    'coin_id': coin.get('id'),
+                    'name': coin.get('name'),
+                    'symbol': coin.get('symbol', '').upper(),
+                    'price': coin.get('current_price', 0),
+                    'market_cap': coin.get('market_cap', 0),
+                    'volume_24h': coin.get('total_volume', 0),
+                    'price_change_24h': coin.get('price_change_percentage_24h', 0),
+                    'image': coin.get('image', '')
+                }
+                coins_list.append(coin_info)
+
+            CoinGeckoService._save_to_cache(cache_key, coins_list)
+            return coins_list, None
+
+        except requests.exceptions.Timeout:
+            return None, 'Request timed out. Please try again.'
+        except requests.exceptions.ConnectionError:
+            return None, 'Network error. Please check your internet connection.'
+        except requests.exceptions.RequestException as e:
+            return None, f'API request failed: {str(e)}'
+        except ValueError:
+            return None, 'Invalid response from API. Please try again.'
+        except Exception as e:
+            return None, f'Unexpected error: {str(e)}'
+
+    @staticmethod
     def fetch_global_data() -> tuple[Optional[Dict], Optional[str]]:
         """
         Fetch global cryptocurrency market data
@@ -249,7 +410,14 @@ class CoinGeckoService:
             # Make API request
             response = requests.get(url, headers=headers, timeout=10)
 
-            # Handle error status codes
+            # Handle 429 - rate limited
+            if response.status_code == 429:
+                stale = CoinGeckoService._get_stale_cache(cache_key)
+                if stale:
+                    return stale, None
+                return None, 'Rate limited by CoinGecko API. Please wait a minute and try again.'
+
+            # Handle other error status codes
             if response.status_code != 200:
                 return None, f'API error: Unable to fetch global data (Status {response.status_code})'
 

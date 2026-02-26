@@ -39,6 +39,16 @@
                             <i class="fas fa-trophy me-1"></i>Top 10
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('crypto.top_gainers') }}">
+                            <i class="fas fa-arrow-trend-up me-1"></i>Gainers
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('crypto.top_losers') }}">
+                            <i class="fas fa-arrow-trend-down me-1"></i>Losers
+                        </a>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -85,6 +95,14 @@
             <a class="nav-link {% if 'top_coins' in request.endpoint %}active{% endif %}" href="{{ url_for('crypto.top_coins') }}">
                 <i class="fas fa-trophy"></i>
                 <span>Top 10</span>
+            </a>
+            <a class="nav-link {% if 'top_gainers' in request.endpoint %}active{% endif %}" href="{{ url_for('crypto.top_gainers') }}">
+                <i class="fas fa-arrow-trend-up"></i>
+                <span>Gainers</span>
+            </a>
+            <a class="nav-link {% if 'top_losers' in request.endpoint %}active{% endif %}" href="{{ url_for('crypto.top_losers') }}">
+                <i class="fas fa-arrow-trend-down"></i>
+                <span>Losers</span>
             </a>
         </nav>
     </div>
